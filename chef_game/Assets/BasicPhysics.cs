@@ -79,7 +79,7 @@ public class BasicPhysics : MonoBehaviour
         Debug.DrawRay(transform.position, -playerUp.normalized * (groundCheck), Color.red, 0);
         float joyH = Input.GetAxis("Horizontal");
         float joyV = Input.GetAxis("Vertical");
-        int joyJ = Input.GetButtonDown("Jump") ? 1 : 0;
+        int joyJ = Input.GetButton("Jump") ? 1 : 0;
         jumpInput = joyJ;
         playerInput = new Vector3(joyH, 0f, joyV);
         lvcv = playerBody.velocity.magnitude;
@@ -103,9 +103,9 @@ public class BasicPhysics : MonoBehaviour
             groundNormal = hit.normal.normalized;
             groundPoint = hit.point;
             groundAngle = Vector3.Angle(worldUp, groundNormal);
-            groundCheck = .5f;
+            groundCheck = .6f;
             if(groundAngle <= 60){playerUp = worldUp;} else{playerUp = groundNormal;}
-            playerBody.position = groundPoint + (Vector3.up * groundCheck);
+            playerBody.position = groundPoint + (Vector3.up * .5f);
             GetMoving();
         }
     else
@@ -160,6 +160,7 @@ public class BasicPhysics : MonoBehaviour
     float dampenValue = isGrounded ? Mathf.Max(currentSpeed - speedRemainder, 0f) : 0f;
     forceMove -= (8 * dampenValue * Time.fixedDeltaTime);
 	Vector3 trueVelocity = transform.forward * forceMove;
+    trueVelocity.y = playerBody.velocity.y;
     moveSpeed = trueVelocity;
 	Vector3 newForward = Vector3.Lerp(playerBody.transform.forward, stabilizedInput, minRateChange * Time.fixedDeltaTime);
    	playerBody.transform.forward = newForward;
@@ -218,7 +219,7 @@ public class BasicPhysics : MonoBehaviour
 
     // Allow for Jumping
     jumpPower = Vector3.up * forceJump * jumpInput;
-    //playerBody.velocity += jumpPower;
+    playerBody.velocity += jumpPower;
     //playerBody.AddForce(transform.up * forceJump * jumpInput);
 
     // Reset Rotation
@@ -245,7 +246,7 @@ public class BasicPhysics : MonoBehaviour
 
     void DisplayText()
     {
-        testText.text = "Velocity: " + playerBody.velocity.ToString() + "\nMove Power: " + forceMove.ToString() + "\nFall Power: " + forceFall.ToString() + "\nLocalVelocity: " + transform.TransformDirection(moveSpeed).ToString();
+        testText.text = "Velocity: " + playerBody.velocity.ToString() + "\nMove Power: " + forceMove.ToString() + "\nFall Power: " + forceFall.ToString() + "\nLocalVelocity: " + jumpInput.ToString();
     }
     
     public LayerMask GetGround()
