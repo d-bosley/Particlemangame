@@ -49,7 +49,7 @@ public class BasicPhysics : MonoBehaviour
     Vector3 hitPoint;
     Vector3 groundNormal;
     Vector3 groundPoint;
-    Vector3 jump; // The vector representing our jump
+    public float jump; // The vector representing our jump
     Vector3 jumpAngle; // What direction we go after jumping given the ground angle
     RaycastHit hit;
     public bool isGrounded = false;
@@ -79,7 +79,7 @@ public class BasicPhysics : MonoBehaviour
         Debug.DrawRay(transform.position, -playerUp.normalized * (groundCheck), Color.red, 0);
         float joyH = Input.GetAxis("Horizontal");
         float joyV = Input.GetAxis("Vertical");
-        int joyJ = Input.GetButton("Jump") ? 1 : 0;
+        int joyJ = Input.GetButtonDown("Jump") ? 1 : 0;
         jumpInput = joyJ;
         playerInput = new Vector3(joyH, 0f, joyV);
         lvcv = playerBody.velocity.magnitude;
@@ -103,9 +103,9 @@ public class BasicPhysics : MonoBehaviour
             groundNormal = hit.normal.normalized;
             groundPoint = hit.point;
             groundAngle = Vector3.Angle(worldUp, groundNormal);
-            groundCheck = .6f;
+            groundCheck = .5f;
             if(groundAngle <= 60){playerUp = worldUp;} else{playerUp = groundNormal;}
-            playerBody.position = groundPoint + (Vector3.up * .5f);
+            playerBody.position = groundPoint + (Vector3.up * groundCheck);
             GetMoving();
         }
     else
@@ -143,11 +143,11 @@ public class BasicPhysics : MonoBehaviour
     int joyRound = (joyPower > 0) ? 1 : 0;
 	accel *= joyRound;
 	friction *= 1f - joyRound;
-    moveSpeed = playerBody.velocity;
+    Vector3 velocity = playerBody.velocity;
+    vectorSplit(velocity, out Vector3 velocityLateral, out Vector3 velocityVertical);
+    Vector3 trueVelocity;
     Vector3 moveInput = joyInput.normalized;
     Vector3 moveSpeedLocalized = transform.InverseTransformDirection(moveSpeed);
-	Vector3 lateralVelocity = new Vector3(moveSpeed.x, 0f, moveSpeed.z);
-	Vector3 verticalVelocity = new Vector3(0f, moveSpeed.y, 0f);
 	Vector3 inputDirection = camera.TransformDirection(joyInput);
 	Vector3 projectedInput = Vector3.ProjectOnPlane(inputDirection, groundNormal);
 	Vector3 stabilizedInput = projectedInput.normalized * joyPower;
@@ -155,22 +155,26 @@ public class BasicPhysics : MonoBehaviour
 	// Start Moving
 	forceMove -= Mathf.Min(friction * Time.fixedDeltaTime, forceMove);
 	forceMove += Mathf.Min(accel * Time.fixedDeltaTime, maxspeed - forceMove);
-	float turnPercentage = Vector3.Angle(lateralVelocity, stabilizedInput) / 180f;
+	float turnPercentage = Vector3.Angle(velocityLateral, stabilizedInput) / 180f;
    	float speedRemainder = maxspeed - (maxspeed * turnPercentage);
     float dampenValue = isGrounded ? Mathf.Max(currentSpeed - speedRemainder, 0f) : 0f;
     forceMove -= (8 * dampenValue * Time.fixedDeltaTime);
-	Vector3 trueVelocity = transform.forward * forceMove;
-    trueVelocity.y = playerBody.velocity.y;
-    moveSpeed = trueVelocity;
-	Vector3 newForward = Vector3.Lerp(playerBody.transform.forward, stabilizedInput, minRateChange * Time.fixedDeltaTime);
+    Vector3 newForward = Vector3.Lerp(playerBody.transform.forward, stabilizedInput, minRateChange * Time.fixedDeltaTime);
    	playerBody.transform.forward = newForward;
+	trueVelocity = transform.forward * forceMove;
+    Vector3 projection = Vector3.ProjectOnPlane(trueVelocity, groundNormal);
+    trueVelocity = Vector3.Lerp(trueVelocity, projection, .82f);
+    vectorSplit(trueVelocity, out Vector3 trueLateral, out Vector3 trueVertical);
+    velocityLateral = trueLateral;
+    velocity = isGrounded ? velocityLateral + trueVertical : velocityLateral + velocityVertical;
+    moveSpeed = velocity;
 	playerBody.velocity = moveSpeed;
 
     // Start Jumping
     // StartJump();
 
     // Stuff to control the object animation
-    float signedTrajectory = Vector3.SignedAngle(lateralVelocity, stabilizedInput, transform.up) / 180f;
+    float signedTrajectory = Vector3.SignedAngle(velocityLateral, stabilizedInput, transform.up) / 180f;
     Quaternion objbase = Quaternion.Euler(0f, 0f, 0f);
     Quaternion control = Quaternion.Euler(transform.eulerAngles.x, transform.eulerAngles.y, transform.eulerAngles.z);
     float tiltEvaluated = tiltingValue.Evaluate(Mathf.Abs(signedTrajectory));
@@ -186,16 +190,16 @@ public class BasicPhysics : MonoBehaviour
     // meshTransform.transform.rotation
 	}
 
-
-    void StartJump()
-    {
-    // Temporary Code Until State Manager is implemented
-    }
-
     float QuickMath(float x)
     {
         float product = Mathf.Round(x * 10f) * .1f;
         return product;
+    }
+
+    void vectorSplit(Vector3 vector, out Vector3 lateralVector, out Vector3 verticalVector)
+    {
+    lateralVector = vector - (Vector3.up * vector.y);
+    verticalVector = Vector3.up * vector.y;
     }
 
     void SurfaceImpact()
@@ -217,10 +221,14 @@ public class BasicPhysics : MonoBehaviour
     // Reset forceFall
     forceFall = 0f;
 
-    // Allow for Jumping
-    jumpPower = Vector3.up * forceJump * jumpInput;
-    playerBody.velocity += jumpPower;
-    //playerBody.AddForce(transform.up * forceJump * jumpInput);
+    // Setup Test Jumping
+    Vector3 velocity = playerBody.velocity;
+    vectorSplit(velocity, out Vector3 velocityLateral, out Vector3 velocityVertical);
+    forceJump = jump * jumpInput;
+    jumpPower = Vector3.up * forceJump;
+    velocityVertical += jumpPower;
+    velocity = velocityLateral + velocityVertical;
+	playerBody.velocity = velocity;
 
     // Reset Rotation
 	rotationLock = 5f;
@@ -232,9 +240,14 @@ public class BasicPhysics : MonoBehaviour
 	SetCoreControl(playerInput, airaacv, airdecv, airfric, msv);
 
 	// Add forceFall
-    forceFall += Mathf.Min(grav, mfv - forceFall);
-    fallSpeed = transform.up * -forceFall;
-	playerBody.velocity += fallSpeed;
+    Vector3 velocity = playerBody.velocity;
+    vectorSplit(velocity, out Vector3 velocityLateral, out Vector3 velocityVertical);
+    forceFall = grav;
+    fallSpeed = Vector3.up * -forceFall;
+    velocityVertical = Vector3.Max(velocityVertical, Vector3.up * -mfv);
+    velocityVertical += fallSpeed * Time.fixedDeltaTime;
+    velocity = velocityLateral + velocityVertical;
+	playerBody.velocity = velocity;
 
     // Apply Rotation to Object
     Vector3 heightCheck = new Vector3(0f, .5f, 0f);
@@ -246,7 +259,7 @@ public class BasicPhysics : MonoBehaviour
 
     void DisplayText()
     {
-        testText.text = "Velocity: " + playerBody.velocity.ToString() + "\nMove Power: " + forceMove.ToString() + "\nFall Power: " + forceFall.ToString() + "\nLocalVelocity: " + jumpInput.ToString();
+        testText.text = "Velocity: " + playerBody.velocity.ToString() + "\nMove Power: " + forceMove.ToString() + "\nFall Power: " + forceFall.ToString() + "\nLocalVelocity: " + transform.TransformDirection(moveSpeed).ToString();
     }
     
     public LayerMask GetGround()
