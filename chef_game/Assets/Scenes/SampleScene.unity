@@ -4295,8 +4295,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.18983051, y: 1e-45, z: 0, w: 0.9818169}
-  m_LocalPosition: {x: 1, y: 10.540001, z: -196.29001}
+  m_LocalRotation: {x: 0.18983029, y: 0.000000015027519, z: -0.0000000029055087, w: 0.98181695}
+  m_LocalPosition: {x: 1, y: 10.540001, z: -392.19}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4656,7 +4656,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1014211811}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1, y: 6.22, z: -185}
+  m_LocalPosition: {x: 1, y: 6.22, z: -380.9}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -4664,6 +4664,7 @@ Transform:
   - {fileID: 1908211095}
   - {fileID: 1268972847}
   - {fileID: 935568152}
+  - {fileID: 2013378693}
   m_Father: {fileID: 0}
   m_RootOrder: 19
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4732,6 +4733,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   camera: {fileID: 963194228}
   playerBody: {fileID: 1014211814}
+  eatBox: {fileID: 2013378694}
   testText: {fileID: 804684342}
   accv: 24
   decv: 22
@@ -5977,6 +5979,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   camera: {fileID: 0}
   playerBody: {fileID: 1014211814}
+  eatBox: {fileID: 0}
   testText: {fileID: 0}
   accv: 0.48
   decv: 4
@@ -6225,8 +6228,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1211372977}
-  m_LocalRotation: {x: 0.18983051, y: 1e-45, z: 0, w: 0.9818169}
-  m_LocalPosition: {x: 1, y: 10.540001, z: -196.29001}
+  m_LocalRotation: {x: 0.18983029, y: 0.000000015027519, z: -0.0000000029055087, w: 0.98181695}
+  m_LocalPosition: {x: 1, y: 10.540001, z: -392.19}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -22940,6 +22943,61 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2013378692
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2013378693}
+  - component: {fileID: 2013378694}
+  m_Layer: 0
+  m_Name: eatBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2013378693
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2013378692}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: -0.92, z: 1.22}
+  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1014211812}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
+--- !u!136 &2013378694
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2013378692}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.89
+  m_Height: 2.34
+  m_Direction: 1
+  m_Center: {x: 0.028268218, y: -0.32275963, z: 0.6}
 --- !u!850595691 &2050420905
 LightingSettings:
   m_ObjectHideFlags: 0

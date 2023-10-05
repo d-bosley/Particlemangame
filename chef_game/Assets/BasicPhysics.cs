@@ -9,6 +9,7 @@ public class BasicPhysics : MonoBehaviour
 {
     public Transform camera;
     public Rigidbody playerBody;
+    public Collider eatBox;
     public TextMeshProUGUI testText;
     public float accv; // Acceleration Value (18f)
     public float decv; // Deceleration Value (21f)
