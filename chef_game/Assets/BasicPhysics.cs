@@ -79,8 +79,7 @@ public class BasicPhysics : MonoBehaviour
         Debug.DrawRay(transform.position, -playerUp.normalized * (groundCheck), Color.red, 0);
         float joyH = Input.GetAxis("Horizontal");
         float joyV = Input.GetAxis("Vertical");
-        int joyJ = Input.GetButtonDown("Jump") ? 1 : 0;
-        jumpInput = joyJ;
+        jumpInput = Input.GetButton("Jump") ? 1 : 0;
         playerInput = new Vector3(joyH, 0f, joyV);
         lvcv = playerBody.velocity.magnitude;
     }
@@ -123,13 +122,13 @@ public class BasicPhysics : MonoBehaviour
     if (isGrounded)
         {
             //transform.rotation = Quaternion.FromToRotation(transform.up, groundNormal) * transform.rotation;
-            orientation = Vector3.MoveTowards(transform.up, groundNormal, Time.fixedDeltaTime * 15f);
-            Quaternion rotater = Quaternion.FromToRotation(transform.up, orientation) * transform.rotation;
-            transform.rotation = rotater; 
+            //orientation = Vector3.MoveTowards(transform.up, groundNormal, Time.fixedDeltaTime * 15f);
+            //Quaternion rotater = Quaternion.FromToRotation(transform.up, orientation) * transform.rotation;
+            //transform.rotation = rotater; 
         }
     else
         {
-            transform.rotation = transform.rotation;
+            //transform.rotation = transform.rotation;
         }
     }
 
@@ -146,10 +145,11 @@ public class BasicPhysics : MonoBehaviour
     Vector3 velocity = playerBody.velocity;
     vectorSplit(velocity, out Vector3 velocityLateral, out Vector3 velocityVertical);
     Vector3 trueVelocity;
+    float lateralSpeed = velocityLateral.magnitude;
     Vector3 moveInput = joyInput.normalized;
     Vector3 moveSpeedLocalized = transform.InverseTransformDirection(moveSpeed);
 	Vector3 inputDirection = camera.TransformDirection(joyInput);
-	Vector3 projectedInput = Vector3.ProjectOnPlane(inputDirection, groundNormal);
+	Vector3 projectedInput = Vector3.ProjectOnPlane(inputDirection, Vector3.up);
 	Vector3 stabilizedInput = projectedInput.normalized * joyPower;
 
 	// Start Moving
@@ -157,7 +157,7 @@ public class BasicPhysics : MonoBehaviour
 	forceMove += Mathf.Min(accel * Time.fixedDeltaTime, maxspeed - forceMove);
 	float turnPercentage = Vector3.Angle(velocityLateral, stabilizedInput) / 180f;
    	float speedRemainder = maxspeed - (maxspeed * turnPercentage);
-    float dampenValue = isGrounded ? Mathf.Max(currentSpeed - speedRemainder, 0f) : 0f;
+    float dampenValue = Mathf.Max(lateralSpeed - speedRemainder, 0f);
     forceMove -= (8 * dampenValue * Time.fixedDeltaTime);
     Vector3 newForward = Vector3.Lerp(playerBody.transform.forward, stabilizedInput, minRateChange * Time.fixedDeltaTime);
    	playerBody.transform.forward = newForward;
@@ -169,9 +169,6 @@ public class BasicPhysics : MonoBehaviour
     velocity = isGrounded ? velocityLateral + trueVertical : velocityLateral + velocityVertical;
     moveSpeed = velocity;
 	playerBody.velocity = moveSpeed;
-
-    // Start Jumping
-    // StartJump();
 
     // Stuff to control the object animation
     float signedTrajectory = Vector3.SignedAngle(velocityLateral, stabilizedInput, transform.up) / 180f;
@@ -189,18 +186,6 @@ public class BasicPhysics : MonoBehaviour
     // UP (0, 1, 0) tilts to (0, .96, 0) which means Fwd and Rht need to lean towards (.4)
     // meshTransform.transform.rotation
 	}
-
-    float QuickMath(float x)
-    {
-        float product = Mathf.Round(x * 10f) * .1f;
-        return product;
-    }
-
-    void vectorSplit(Vector3 vector, out Vector3 lateralVector, out Vector3 verticalVector)
-    {
-    lateralVector = vector - (Vector3.up * vector.y);
-    verticalVector = Vector3.up * vector.y;
-    }
 
     void SurfaceImpact()
     {
@@ -224,11 +209,14 @@ public class BasicPhysics : MonoBehaviour
     // Setup Test Jumping
     Vector3 velocity = playerBody.velocity;
     vectorSplit(velocity, out Vector3 velocityLateral, out Vector3 velocityVertical);
+    if(jumpInput == 1)
+    {
     forceJump = jump * jumpInput;
     jumpPower = Vector3.up * forceJump;
-    velocityVertical += jumpPower;
+    velocityVertical = jumpPower;
     velocity = velocityLateral + velocityVertical;
 	playerBody.velocity = velocity;
+    }
 
     // Reset Rotation
 	rotationLock = 5f;
@@ -257,9 +245,21 @@ public class BasicPhysics : MonoBehaviour
     if(rotationLock <= 0f){transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, transform.eulerAngles.y, 0), step);}
 	}
 
+    float QuickMath(float x)
+    {
+        float product = Mathf.Round(x * 10f) * .1f;
+        return product;
+    }
+
+    void vectorSplit(Vector3 vector, out Vector3 lateralVector, out Vector3 verticalVector)
+    {
+    lateralVector = vector - (Vector3.up * vector.y);
+    verticalVector = Vector3.up * vector.y;
+    }
+
     void DisplayText()
     {
-        testText.text = "Velocity: " + playerBody.velocity.ToString() + "\nMove Power: " + forceMove.ToString() + "\nFall Power: " + forceFall.ToString() + "\nLocalVelocity: " + transform.TransformDirection(moveSpeed).ToString();
+        testText.text = "Velocity: " + playerBody.velocity.ToString() + "\nJumping: " + jumpInput.ToString();
     }
     
     public LayerMask GetGround()
